@@ -72,10 +72,13 @@ public abstract class IntentService extends Service {
         public ServiceHandler(Looper looper) {
             super(looper);
         }
-
+        //IntentService的handleMessage方法把接收的消息交给onHandleIntent()处理
+        //onHandleIntent()是一个抽象方法，使用时需要重写的方法
         @Override
         public void handleMessage(Message msg) {
+            // onHandleIntent 方法在工作线程中执行，执行完调用 stopSelf() 结束服务。
             onHandleIntent((Intent)msg.obj);
+            //onHandleIntent 处理完成后 IntentService会调用 stopSelf() 自动停止。
             stopSelf(msg.arg1);
         }
     }
@@ -117,10 +120,15 @@ public abstract class IntentService extends Service {
         // method that would launch the service & hand off a wakelock.
 
         super.onCreate();
+        // HandlerThread继承自Thread，内部封装了 Looper
+        //通过实例化andlerThread新建线程并启动
+        //所以使用IntentService时不需要额外新建线程
         HandlerThread thread = new HandlerThread("IntentService[" + mName + "]");
         thread.start();
-
+        //获得工作线程的 Looper，并维护自己的工作队列
         mServiceLooper = thread.getLooper();
+        //将上述获得Looper与新建的mServiceHandler进行绑定
+        //新建的Handler是属于工作线程的。
         mServiceHandler = new ServiceHandler(mServiceLooper);
     }
 
