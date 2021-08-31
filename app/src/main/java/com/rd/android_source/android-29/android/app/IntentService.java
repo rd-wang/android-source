@@ -16,9 +16,9 @@
 
 package android.app;
 
+import android.annotation.Nullable;
 import android.annotation.UnsupportedAppUsage;
 import android.annotation.WorkerThread;
-import android.annotation.Nullable;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -68,21 +68,6 @@ public abstract class IntentService extends Service {
     private String mName;
     private boolean mRedelivery;
 
-    private final class ServiceHandler extends Handler {
-        public ServiceHandler(Looper looper) {
-            super(looper);
-        }
-        //IntentService的handleMessage方法把接收的消息交给onHandleIntent()处理
-        //onHandleIntent()是一个抽象方法，使用时需要重写的方法
-        @Override
-        public void handleMessage(Message msg) {
-            // onHandleIntent 方法在工作线程中执行，执行完调用 stopSelf() 结束服务。
-            onHandleIntent((Intent)msg.obj);
-            //onHandleIntent 处理完成后 IntentService会调用 stopSelf() 自动停止。
-            stopSelf(msg.arg1);
-        }
-    }
-
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
      *
@@ -131,6 +116,13 @@ public abstract class IntentService extends Service {
         //新建的Handler是属于工作线程的。
         mServiceHandler = new ServiceHandler(mServiceLooper);
     }
+
+    //IntentService本质是采用Handler & HandlerThread方式：
+    //通过HandlerThread单独开启一个名为IntentService的线程
+    //创建一个名叫ServiceHandler的内部Handler
+    //把内部Handler与HandlerThread所对应的子线程进行绑定
+    //通过onStartCommand()传递给服务intent，依次插入到工作队列中，并逐个发送给onHandleIntent()
+    //通过onHandleIntent()来依次处理所有Intent请求对象所对应的任务
 
     @Override
     public void onStart(@Nullable Intent intent, int startId) {
@@ -186,4 +178,19 @@ public abstract class IntentService extends Service {
      */
     @WorkerThread
     protected abstract void onHandleIntent(@Nullable Intent intent);
+
+    private final class ServiceHandler extends Handler {
+        public ServiceHandler(Looper looper) {
+            super(looper);
+        }
+        //IntentService的handleMessage方法把接收的消息交给onHandleIntent()处理
+        //onHandleIntent()是一个抽象方法，使用时需要重写的方法
+        @Override
+        public void handleMessage(Message msg) {
+            // onHandleIntent 方法在工作线程中执行，执行完调用 stopSelf() 结束服务。
+            onHandleIntent((Intent)msg.obj);
+            //onHandleIntent 处理完成后 IntentService会调用 stopSelf() 自动停止。
+            stopSelf(msg.arg1);
+        }
+    }
 }
