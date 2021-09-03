@@ -1,6 +1,8 @@
 # android-source
-查看android
+查看 android-source 记录的笔记
 
 # HashMap 关键方法详解
-  配图 /Users/roobo/workspace/android-source/app/src/main/res/image/hashmap
+    ./note/HashMap.md
   
+# AndroidLicycle 图解
+    ./note/ReadmeAndroidLicycle.md
